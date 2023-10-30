@@ -1,7 +1,7 @@
 const express = require("express");
 const path = require("path");
 
-const { open } = require("sqlite");
+const { open } = require("sqlite"ccbp submit NJSCPXTWMS);
 const sqlite3 = require("sqlite3");
 const app = express();
 
@@ -63,12 +63,11 @@ app.get("/players/:playerId/", async (request, response) => {
 app.put("/players/:playerId/", async (request, response) => {
   const playerDetails = request.body;
   const { playerId } = request.params;
-  const { playerId, playerName, playerNumber, role };
+  const { playerName, playerNumber, role };
 
   const updatePlayerQuery = `
        UPDATE cricket_team
        SET 
-         player_id = ${playerId},
          player_name = "${playerName}",
          player_number = ${playerNumber},
          role = "${role}"
