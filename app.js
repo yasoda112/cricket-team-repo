@@ -1,20 +1,22 @@
 const express = require("express");
 const path = require("path");
 
-const { open } = require("sqlite"ccbp submit NJSCPXTWMS);
+const { open } = require("sqlite");
 const sqlite3 = require("sqlite3");
 const app = express();
 
 app.use(express.json());
 
-const dpPath = path.join(__dirname, "cricketTeam.db");
+const dbPath = path.join(__dirname, "cricketTeam.db");
 
 let db = null;
 
 const initilizeDbAndServer = async () => {
   try {
-    db = await open({ filename: dpPath, driver: sqlite3.Database });
-    app.listen(3000);
+    db = await open({ filename: dbPath, driver: sqlite3.Database });
+    app.listen(3001, () => {
+      console.log("Server Running at http://localhost:3001/");
+    });
   } catch (e) {
     console.log(`${e.message}`);
     process.exit(1);
@@ -23,27 +25,39 @@ const initilizeDbAndServer = async () => {
 
 initilizeDbAndServer();
 
+const convertDbObjectToResponseObject = (dbObject) => {
+  return {
+    playerId: dbObject.player_id,
+    playerName: dbObject.player_name,
+    jerseyNumber: dbObject.jersey_number,
+    role: dbObject.role,
+  };
+};
+
 app.get("/players/", async (request, response) => {
   const getPlayersQuery = `
        SELECT 
        * 
         FROM
-       cricket_team 
+       cricket_team ; 
     `;
   const dbResponse = await db.all(getPlayersQuery);
-  response.send(dbResponse);
+
+  response.send(
+    dbResponse.map((eachPlayer) => convertDbObjectToResponseObject(eachPlayer))
+  );
 });
 
 app.post("/players/", async (request, response) => {
-  const bookDetails = request.body;
-  const { playerName, jerseyNumber, role } = bookDetails;
+  const playerDetails = request.body;
+  const { playerName, jerseyNumber, role } = playerDetails;
   const addPlayerQuery = `
         INSERT INTO 
         cricket_team (player_name, jersey_number, role)
         VALUES (
              "${playerName}",
              ${jerseyNumber},
-             "${role}"     
+             "${role}"
         );`;
   const dbResponse = await db.run(addPlayerQuery);
   const playerId = dbResponse.lastID;
@@ -57,19 +71,21 @@ app.get("/players/:playerId/", async (request, response) => {
         cricket_team
         WHERE player_id = ${playerId};`;
   const dbResponse = await db.get(getPlayerQuery);
-  response.send(dbResponse);
+  response.send(
+    dbResponse.map((eachPlayer) => convertDbObjectToResponseObject(eachPlayer))
+  );
 });
 
 app.put("/players/:playerId/", async (request, response) => {
   const playerDetails = request.body;
   const { playerId } = request.params;
-  const { playerName, playerNumber, role };
+  const { playerName, jerseyNumber, role } = playerDetails;
 
   const updatePlayerQuery = `
        UPDATE cricket_team
        SET 
          player_name = "${playerName}",
-         player_number = ${playerNumber},
+         jersey_number = ${jerseyNumber},
          role = "${role}"
          
        WHERE player_id = ${playerId};`;
